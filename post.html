@@ -1,0 +1,208 @@
+<!DOCTYPE html> 
+ <html>
+     <head>
+         <title>Post Mini Project</title>
+     </head>
+     <body>
+         <div id="root">
+
+         </div>
+         <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+         <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+         <script src="../js/babel.js"></script>
+         <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+         <script type='text/babel'>
+            const rootHandle = document.getElementById('root')
+            const {useState,useEffect} = React
+
+            const ShowDetail=(props)=>{
+                    const {posts,click,likeHandler,dislikeHandler} = props
+                    console.log(typeof(click))
+                    console.log(typeof(posts))
+                    return (
+                        posts.map((ele)=>{
+                            return ele.id<=click*10 && (<div key={ele.id}>  
+                                                        <h3> {ele.title} </h3>
+                                                        <p>{ele.body} </p>
+                                                        <button onClick={()=>{likeHandler(ele)}}>
+                                                            Like </button>
+                                                        <button onClick={()=>{dislikeHandler(ele)}}>Dislike</button>
+                                                        </div>
+                                                        )
+                                    
+                        })
+                    )
+                    }
+
+            function ShowSearch(posts,title){
+                
+                return (
+                     posts.find(item=>item.title==title)
+                )
+            }
+
+            const App=(props)=>{
+                
+                const [posts, setPosts] = useState([])
+                const [click, setClick] = useState(1)
+                const [title, setTitle] = useState('')
+                const [searchValue, setSearchValue] = useState({})
+                const [notFound, setNotFound] = useState('')
+                const [like, setLike] = useState([])
+                const [dislike, setDislike] = useState([])
+                const [ likeValue, setLikeValue] = useState(false)
+                const [ dislikeValue, setDisLikeValue] = useState(false)
+
+               //const like = [] 
+               // const dislike = []
+                const likey="like"
+                const dislikey="dislike"
+
+                useEffect(()=>{
+                    axios.get('https://jsonplaceholder.typicode.com/posts')
+                    .then((response)=>{
+                        const result = response.data 
+                        console.log(result)
+                        setPosts(result)
+                    })
+                    .catch((err)=>{
+                        console.log(err.message)
+                    })
+                },[])
+                
+                const handleClick=(props)=>{
+                    setClick(click+1)
+                   // console.log(click)
+                }
+
+                const handleChange=(e)=>{
+                    setTitle(e.target.value)
+                }
+
+                const handleSubmit=(e)=>{
+                    e.preventDefault()
+                  const res = ShowSearch(posts,title)
+                  if(res){
+                    setSearchValue(res)
+                  }
+                   else {
+                       setNotFound("Record not found")
+                       setSearchValue(0)
+                   }
+                   
+                }
+
+                const likeHandler = (props)=>{
+                    const {id,title,body} = props
+                    const obj = {
+                        id: id,
+                        title: title,
+                        body: body
+                    }
+
+                    return (
+                            like.push(obj)
+                            //setLike(props)       
+                     )
+                }
+
+                const dislikeHandler = (props)=>{
+                    const {id,title,body} = props
+                    const obj = {
+                        id:id,
+                        title:title,
+                        body:body
+                    }
+                    return (
+                           // setDislike(props)
+                           dislike.push(obj)
+                           
+                    )
+                }
+
+                const selectHandler = (e)=>{
+                    const result = e.target.value
+                    
+                   if(result==likey){
+                    console.log(result)
+                    setLikeValue(true)
+                    
+                   }
+                   else if(result==dislikey){
+                        console.log(result)
+                         setDisLikeValue(true)
+                      
+
+                   }
+                 
+                    
+                }
+
+                return (
+                    <div>
+                    <h2> Posts </h2>
+
+                    <form onSubmit={handleSubmit}>
+                    <input type="text" value={title} onChange={handleChange} /> 
+                    <input type="submit" value="search" />   
+                    </form><br/>
+
+                    <label> Choose Like/Dislike </label>
+                    <select onChange={selectHandler}>
+                        <option> Select </option>
+                        <option value={likey} >Like</option>
+                        <option value={dislikey} >Dislike</option>
+                    </select>
+                    <br/>
+                    <br/>
+                    <label>Like</label>
+                    {likeValue &&  like.map((item,k)=>{ return (<div key={k} style={{color:"blue"}}>
+                                                 <h3 > {item.title} </h3>
+                                                 <p> {item.body} </p>
+                                                 </div>)})} 
+                    <br/>
+                    <br/>
+                    <label>Dislike</label>
+                    {dislikeValue &&  dislike.map((item,k)=>{ return (<div key={k} style={{color:"green"}}>
+                                                 <h3 > {item.title} </h3>
+                                                 <p> {item.body} </p>
+                                                 </div>)})}
+                    
+                    { Object.keys(searchValue).length>0  ? (<div style={{color:"red"}}>
+                                                            <h2 > Found the post  </h2>
+                                                            <h3>{searchValue.title}</h3>
+                                                            <p>{searchValue.body}</p>
+                                                            </div>
+                    ) : <h2 style={{color:"red"}}> {notFound} </h2>}
+                    
+
+                    { click>1 ? <ShowDetail posts={posts} click={click} likeHandler={likeHandler}          dislikeHandler={dislikeHandler}/> : 
+                    (
+                      posts.map((ele)=>{
+                          return  ele.id<=click*10 && (<div key={ele.id}>  
+                                             <h3> {ele.title} </h3>
+                                            <p>{ele.body} </p>
+                                            <button onClick={()=>{likeHandler(ele)}}>Like</button>
+                                            <button onClick={()=>{dislikeHandler(ele)}}>Dislike</button>
+                                            
+                                            </div>)
+                              
+                                        
+                          })
+                          
+                     
+                    )
+                    }  
+                   
+                    <br/><button onClick={handleClick} >show more</button>
+                    </div>
+                )
+            }
+
+            ReactDOM.render(<App />,rootHandle)
+        </script>
+
+
+     </body>
+ </html>
